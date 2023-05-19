@@ -1,5 +1,8 @@
 # Official YOLOv7
 
+#### Download my custom model
+https://drive.google.com/file/d/1j-HjMrnC_BcYOpup7daVQq9teDJPI0Is/view?usp=share_link
+
 Implementation of paper - [YOLOv7: Trainable bag-of-freebies sets new state-of-the-art for real-time object detectors](https://arxiv.org/abs/2207.02696)
 
 [![PWC](https://img.shields.io/endpoint.svg?url=https://paperswithcode.com/badge/yolov7-trainable-bag-of-freebies-sets-new/real-time-object-detection-on-coco)](https://paperswithcode.com/sota/real-time-object-detection-on-coco?p=yolov7-trainable-bag-of-freebies-sets-new)
