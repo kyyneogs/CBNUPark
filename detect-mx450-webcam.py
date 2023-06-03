@@ -14,14 +14,12 @@ from utils.plots import plot_one_box
 from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
 from utils.parking import whRatio, plot_lines, plot_card, readVertices, isPointInside
 
-import os
-
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 
 
-conf_thres = 0.25
+conf_thres = 0.55
 iou_thres = 0.65
 
 def detect(weights, imgsz):
@@ -44,7 +42,7 @@ def detect(weights, imgsz):
     # Set Dataloader
     view_img = check_imshow()
     cudnn.benchmark = True  # set True to speed up constant image size inference
-    dataset = LoadStreams('1', img_size=imgsz, stride=stride)
+    dataset = LoadStreams('0', img_size=imgsz, stride=stride)
 
     # # Get names and colors
     names = model.module.names if hasattr(model, 'module') else model.names
@@ -57,6 +55,16 @@ def detect(weights, imgsz):
     old_img_b = 1
 
     vertices, max_slot = readVertices('./slot_vertices.txt')
+
+    slots_buff1 = {}
+    slots_buff2 = {}
+    slots_buff3 = {}
+
+    for j in range(max_slot):
+        slots_buff1[f'slot_{str(j).zfill(2)}'] = False
+        slots_buff2[f'slot_{str(j).zfill(2)}'] = False
+        slots_buff3[f'slot_{str(j).zfill(2)}'] = False
+    
     slots = {}
 
     t0 = time.time()
@@ -93,11 +101,15 @@ def detect(weights, imgsz):
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes=None, agnostic=True)
         t3 = time_synchronized()
 
+        slots_buff3 = dict.copy(slots_buff2)
+        slots_buff2 = dict.copy(slots_buff1)
+        
+
         # Process detections
         for i, det in enumerate(pred):  # detections per image
 
             for j in range(max_slot):
-                slots[f'slot_{str(j).zfill(2)}'] = False
+                slots_buff1[f'slot_{str(j).zfill(2)}'] = False
 
             p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
 
@@ -117,12 +129,11 @@ def detect(weights, imgsz):
                 
                 # Write results
 
-                for *xyxy, conf, cls in reversed(det):
+                for *xyxy, conf, _ in reversed(det):
                     # this is for check slots availability
                     xywh = xyxy2xywh(torch.tensor(xyxy).view(1, 4)).view(-1).tolist()
 
                     x, y, w, h = xywh[0:4]
-                    # y_ratioed = y + (h / 4)
 
                     # w, h의 비율에 따라 좌표값을 정함.
                     y_ratioed = y + (h / 4) * whRatio(w, h)
@@ -130,34 +141,37 @@ def detect(weights, imgsz):
                     cv2.circle(im0, (int(x), int(y_ratioed)), 2, (0,0,255), -1)
 
                     for i in range(max_slot):
-                        slots[f"slot_{str(i).zfill(2)}"] = slots[f"slot_{str(i).zfill(2)}"] or isPointInside(int(x), int(y_ratioed), vertices[i])
+                        slots_buff1[f"slot_{str(i).zfill(2)}"] = slots_buff1[f"slot_{str(i).zfill(2)}"] or isPointInside(int(x), int(y_ratioed), vertices[i])
 
-            # Print time (inference + NMS)
+        for i in range(max_slot):
+            slots[f"slot_{str(i).zfill(2)}"] = slots_buff1[f"slot_{str(i).zfill(2)}"] or slots_buff2[f"slot_{str(i).zfill(2)}"] or slots_buff3[f"slot_{str(i).zfill(2)}"]
 
-            plot_lines(im0, slots, max_slot, vertices)
+        plot_lines(im0, slots, max_slot, vertices)
 
-            try:
-                dir = db.reference('slots')
-                dir.update(slots)
-            except:
-                print("cannot updata FireBase")
+        try:
+            dir = db.reference()
+            dir.update(slots)
+        except:
+            print("(WARNING) cannot update FireBase")
 
-            # cv2.imwrite(save_path, im0)
-            cv2.imshow('image', im0)
-            
-            if cv2.waitKey(30)==27:
-                exit()
+        # cv2.imwrite(save_path, im0)
+        cv2.imshow('image', im0)
+        
+        if cv2.waitKey(30)==27:
+            exit()
 
-            print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
+        print(f'{s}Done. ({(1E3 * (t2 - t1)):.1f}ms) Inference, ({(1E3 * (t3 - t2)):.1f}ms) NMS')
+        # print(slots_buff1['slot_01'], slots_buff2['slot_01'], slots_buff3['slot_01'])
+        # time.sleep(2)
 
-            # 매 프레임마다 firebase에 업로드를 하면 지연시간이 굉장히 길어지는 것 같음.
-            # 따라서 몇몇 프레임마다 업데이트 하거나, 10초에 한번 씩 업데이트 하는 방법 등을 이용해야 할 것 같음.
+        # 매 프레임마다 firebase에 업로드를 하면 지연시간이 굉장히 길어지는 것 같음.
+        # 따라서 몇몇 프레임마다 업데이트 하거나, 10초에 한번 씩 업데이트 하는 방법 등을 이용해야 할 것 같음.
 
 
 if __name__ == '__main__':
 
     # source = 'img/' # should attach '/' at last
-    weights = 'weights/mask.pt'
+    weights = 'weights/best_final.pt'
     imgsz = 640
     # dir_name = 'test_1'
         
