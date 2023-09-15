@@ -23,6 +23,9 @@
 !setup.cfg
 !cfg/yolov3*.cfg
 
+# firebase와의 연결을 위한 인증부분. 노출되면 안됨.
+certificate/
+
 storage.googleapis.com
 runs/*
 data/*

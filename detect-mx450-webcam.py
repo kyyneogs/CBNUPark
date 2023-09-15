@@ -4,10 +4,9 @@ from pathlib import Path
 import cv2
 import torch
 import torch.backends.cudnn as cudnn
-import numpy as np
 
 from models.experimental import attempt_load
-from utils.datasets import LoadStreams, LoadImages
+from utils.datasets import LoadStreams
 from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, xyxy2xywh, set_logging
 from utils.torch_utils import select_device, time_synchronized, TracedModel
 from utils.parking import whRatio, plot_lines, plot_card, readVertices, isPointInside
