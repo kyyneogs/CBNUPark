@@ -8,10 +8,8 @@ import numpy as np
 
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
-from utils.general import check_img_size, check_requirements, check_imshow, non_max_suppression, apply_classifier, \
-    scale_coords, xyxy2xywh, strip_optimizer, set_logging, increment_path
-from utils.plots import plot_one_box
-from utils.torch_utils import select_device, load_classifier, time_synchronized, TracedModel
+from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, xyxy2xywh, set_logging
+from utils.torch_utils import select_device, time_synchronized, TracedModel
 from utils.parking import whRatio, plot_lines, plot_card, readVertices, isPointInside
 
 import firebase_admin
@@ -30,7 +28,7 @@ def detect(weights, imgsz):
     # cv2_img = cv2.filter2D(cv2_img, -1, sharpening_mask1)
 
     set_logging()
-    device = select_device('0')
+    device = select_device('cpu')
     half = False
 
     model = attempt_load(weights, map_location=device)  # load FP32 model
@@ -171,7 +169,7 @@ def detect(weights, imgsz):
 if __name__ == '__main__':
 
     # source = 'img/' # should attach '/' at last
-    weights = 'weights/best_final.pt'
+    weights = 'weights/best.pt'
     imgsz = 640
     # dir_name = 'test_1'
         
