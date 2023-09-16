@@ -12,9 +12,7 @@ from utils.torch_utils import select_device, time_synchronized, TracedModel
 from utils.parking import whRatio, plot_lines, plot_card, readVertices, isPointInside
 
 import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import db
-
+from firebase_admin import credentials, db
 
 conf_thres = 0.55
 iou_thres = 0.65
