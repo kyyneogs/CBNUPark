@@ -1,4 +1,4 @@
-# Official YOLOv7
+#Vision AI Sensorless Smark Parking System [CBNUPark]
 
 ![ezgif com-gif-maker](https://github.com/kyyneogs/CBNUPark/assets/121914754/3a3a6ae5-ad82-429f-bc42-21e3cdff5e8b)
 
