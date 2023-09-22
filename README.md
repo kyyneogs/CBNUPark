@@ -1,7 +1,7 @@
 # Vision AI Sensorless Smark Parking System [CBNUPark]
 
-## This project is a Vision AI-based smart parking lot project conducted at Chungbuk National University in 2023. 
-## YOLOv7 was used, and it was confirmed to run in Windows and Mac environments.
+This project is a Vision AI-based smart parking lot project conducted at Chungbuk National University in 2023. 
+YOLOv7 was used, and it was confirmed to run in Windows and Mac environments.
 
 ![ezgif com-gif-maker](https://github.com/kyyneogs/CBNUPark/assets/121914754/3a3a6ae5-ad82-429f-bc42-21e3cdff5e8b)
 
