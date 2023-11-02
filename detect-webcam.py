@@ -9,13 +9,15 @@ from models.experimental import attempt_load
 from utils.datasets import LoadStreams
 from utils.general import check_img_size, check_imshow, non_max_suppression, scale_coords, xyxy2xywh, set_logging
 from utils.torch_utils import select_device, time_synchronized, TracedModel
-from utils.parking import whRatio, plot_lines, plot_card, readVertices, isPointInside
+from utils.parking import whRatio, plot_lines, plot_card, readVertices, isPointInside, update_buffer, check_buffer
 
 import firebase_admin
 from firebase_admin import credentials, db
 
 conf_thres = 0.55
 iou_thres = 0.65
+
+MAX_BUFF = 12
 
 def detect(weights, imgsz):
     # cv2_img = cv2.imread(source, 1)
@@ -49,20 +51,21 @@ def detect(weights, imgsz):
     old_img_w = old_img_h = imgsz
     old_img_b = 1
 
-    vertices, max_slot = readVertices('./slot_vertices.txt')
+    vertices, MAX_SLOT = readVertices('./slot_vertices.txt')
 
-    slots_buff1 = {}
-    slots_buff2 = {}
-    slots_buff3 = {}
+    slots_buffer = [{} for _ in range(MAX_BUFF)]
 
-    for j in range(max_slot):
-        slots_buff1[f'slot_{str(j).zfill(2)}'] = False
-        slots_buff2[f'slot_{str(j).zfill(2)}'] = False
-        slots_buff3[f'slot_{str(j).zfill(2)}'] = False
+    # 버퍼 초기화 선언
+    for j in range(MAX_BUFF):
+        for k in range(MAX_SLOT):
+            slots_buffer[j][f'slot_{str(k).zfill(2)}'] = False
+
+    # for j in range(MAX_SLOT):
+    #     slots_buff1[f'slot_{str(j).zfill(2)}'] = False
+    #     slots_buff2[f'slot_{str(j).zfill(2)}'] = False
+    #     slots_buff3[f'slot_{str(j).zfill(2)}'] = False
     
-    slots = {}
-
-    t0 = time.time()
+    # t0 = time.time()
 
     for path, img, im0s, vid_cap in dataset:
 
@@ -96,21 +99,19 @@ def detect(weights, imgsz):
         pred = non_max_suppression(pred, conf_thres, iou_thres, classes=None, agnostic=True)
         t3 = time_synchronized()
 
-        slots_buff3 = dict.copy(slots_buff2)
-        slots_buff2 = dict.copy(slots_buff1)
-        
+        # 버퍼 업데이트, 한칸씩 당김
+        update_buffer(slots_buffer)
 
         # Process detections
         for i, det in enumerate(pred):  # detections per image
 
-            for j in range(max_slot):
-                slots_buff1[f'slot_{str(j).zfill(2)}'] = False
+            # 첫번째 버퍼 부분을 초기화 작업 진행
+            for k in range(MAX_SLOT):
+                slots_buffer[0][f'slot_{str(k).zfill(2)}'] = False
 
             p, s, im0, frame = path[i], '%g: ' % i, im0s[i].copy(), dataset.count
 
             p = Path(p)  # to Path
-            # save_path = str(save_dir / p.name)  # img.jpg
-            # txt_path = str(save_dir / p.stem) + ('')  # img.txt
 
             gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
@@ -135,13 +136,14 @@ def detect(weights, imgsz):
                     plot_card(im0, xyxy, conf)
                     cv2.circle(im0, (int(x), int(y_ratioed)), 2, (0,0,255), -1)
 
-                    for i in range(max_slot):
-                        slots_buff1[f"slot_{str(i).zfill(2)}"] = slots_buff1[f"slot_{str(i).zfill(2)}"] or isPointInside(int(x), int(y_ratioed), vertices[i])
+                    for k in range(MAX_SLOT):
+                        slots_buffer[0][f"slot_{str(k).zfill(2)}"] = slots_buffer[0][f"slot_{str(k).zfill(2)}"] or isPointInside(int(x), int(y_ratioed), vertices[k])
 
-        for i in range(max_slot):
-            slots[f"slot_{str(i).zfill(2)}"] = slots_buff1[f"slot_{str(i).zfill(2)}"] or slots_buff2[f"slot_{str(i).zfill(2)}"] or slots_buff3[f"slot_{str(i).zfill(2)}"]
+        slots = check_buffer(slots_buffer)
+        # for i in range(MAX_SLOT):
+        #     slots[f"slot_{str(i).zfill(2)}"] = slots_buff1[f"slot_{str(i).zfill(2)}"] or slots_buff2[f"slot_{str(i).zfill(2)}"] or slots_buff3[f"slot_{str(i).zfill(2)}"]
 
-        plot_lines(im0, slots, max_slot, vertices)
+        plot_lines(im0, slots, MAX_SLOT, vertices)
 
         try:
             dir = db.reference()
@@ -152,6 +154,7 @@ def detect(weights, imgsz):
         # cv2.imwrite(save_path, im0)
         cv2.imshow('image', im0)
         
+        # esc 키를 누르면 프로그램을 종료.
         if cv2.waitKey(30)==27:
             exit()
 

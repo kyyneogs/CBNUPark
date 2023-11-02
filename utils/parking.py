@@ -35,6 +35,30 @@ def plot_card(cv2_img, c, conf):
     cv2.putText(cv2_img, label, (c_1[0], c_1[1] - 2), 0, tl / 3, [225, 255, 255], thickness=tf, lineType=cv2.LINE_AA)
 
 
+def update_buffer(slots_buffer):
+    for i in range(len(slots_buffer)-1, 0, -1):
+        for j in range(len(slots_buffer[0])):
+            slots_buffer[i][f'slot_{str(j).zfill(2)}'] = slots_buffer[i-1][f'slot_{str(j).zfill(2)}']
+
+
+def check_buffer(slots_buffer):
+    slots_dict = [0] * len(slots_buffer[0])
+    slots = {}
+    
+    for i in range(len(slots_buffer)):
+        for j in range(len(slots_buffer[0])):
+            if slots_buffer[i][f'slot_{str(j).zfill(2)}'] == True:
+                slots_dict[j] += 1
+    
+    for i in range(len(slots_buffer[0])):
+        if slots_dict[i] >= len(slots_buffer)//2:
+            slots[f'slot_{str(i).zfill(2)}'] = True
+        else:
+            slots[f'slot_{str(i).zfill(2)}'] = False
+    
+    return slots
+
+
 def readVertices(vertices_meta):
     
     with open(vertices_meta, 'r') as file:
