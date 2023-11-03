@@ -1,5 +1,5 @@
-import os
-os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
+# import os
+# os.environ["OPENCV_VIDEOIO_MSMF_ENABLE_HW_TRANSFORMS"] = "0"
 
 import cv2 
 import numpy as np 
@@ -61,11 +61,14 @@ class MouseGesture():
 
 if __name__=="__main__":
 
-    webcam = cv2.VideoCapture(1, cv2.CAP_MSMF)
+    webcam = cv2.VideoCapture(0)
+   
     webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    status, frame = webcam.read()
+    # 노출 보정시키기 위한 값
+    for _ in range(5):
+        status, frame = webcam.read()
     img = frame
     webcam.release()
 

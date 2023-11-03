@@ -26,8 +26,8 @@ def detect(weights, imgsz):
     # cv2_img = cv2.filter2D(cv2_img, -1, sharpening_mask1)
 
     set_logging()
-    device = select_device('cpu')
-    half = False
+    device = select_device('0')
+    half = True
 
     model = attempt_load(weights, map_location=device)  # load FP32 model
     stride = int(model.stride.max())  # model stride

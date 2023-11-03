@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from copy import deepcopy
 
 def whRatio(w, h):
 
@@ -73,6 +74,20 @@ def readVertices(vertices_meta):
         max_slot = max_slot + 1
 
     return(array_2d, max_slot)
+
+
+def readMaskVertices(vertices_meta):
+    with open(vertices_meta, 'r') as file:
+        lines = file.readline()
+    numbers = list(map(int, lines.strip().split(' ')))
+    array = [[numbers[i], numbers[i+1]] for i in range(0, len(numbers), 2)]
+    return(array)
+
+
+def masking(frame, pts):
+    result = deepcopy(frame)
+    result = cv2.fillPoly(result, [np.array(pts, np.int32)], 1)
+    return result
 
 
 def isPointInside(point_x, point_y, vertices):
