@@ -266,7 +266,7 @@ class LoadWebcam:  # for inference
 
 class LoadStreams:  # multiple IP or RTSP cameras
     def __init__(self, sources='streams.txt', img_size=640, stride=32):
-        # self.mask_array = readMaskVertices('mask_cordi.txt')
+        self.mask_array = readMaskVertices('mask_cordi.txt')
         self.mode = 'stream'
         self.img_size = img_size
         self.stride = stride
@@ -330,17 +330,17 @@ class LoadStreams:  # multiple IP or RTSP cameras
 
     def __next__(self):
         self.count += 1
-        img0 = self.imgs.copy()
+        img0 = deepcopy(self.imgs)
         if cv2.waitKey(1) == ord('q'):  # q to quit
             cv2.destroyAllWindows()
             raise StopIteration
 
 
         # masking
-        # img = [masking(x, self.mask_array) for x in img0]
+        img = [masking(x, self.mask_array) for x in self.imgs]
 
         # Letterbox
-        img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in img0]
+        img = [letterbox(x, self.img_size, auto=self.rect, stride=self.stride)[0] for x in img]
 
         # Stack
         img = np.stack(img, 0)
