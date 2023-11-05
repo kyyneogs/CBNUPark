@@ -85,7 +85,7 @@ def readMaskVertices(vertices_meta):
 
 
 def masking(frame, pts):
-    result = deepcopy(frame)
+    result = frame
     result = cv2.fillPoly(result, [np.array(pts, np.int32)], 1)
     return result
 
