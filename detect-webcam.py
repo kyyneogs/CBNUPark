@@ -16,7 +16,7 @@ from firebase_admin import credentials, db
 conf_thres = 0.55
 iou_thres = 0.65
 
-MAX_BUFF = 12
+MAX_BUFF = 6
 
 def detect(weights, imgsz):
     # cv2_img = cv2.imread(source, 1)
